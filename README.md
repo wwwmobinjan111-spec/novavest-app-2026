@@ -1,1 +1,0 @@
-# novavest-app-2026
