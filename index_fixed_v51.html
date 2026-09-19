@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NovaVest Demo v50</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#17324d;color:#fff;padding:18px;text-align:center}main{max-width:520px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 4px 16px #00000012}
+h1,h2{margin-top:0}.balance{font-size:30px;font-weight:bold;margin:8px 0}
+input,button{width:100%;padding:13px;border-radius:10px;font-size:16px;margin:7px 0}
+input{border:1px solid #ccd3da}button{border:0;background:#17324d;color:#fff;font-weight:bold}
+button.secondary{background:#e9eef2;color:#17324d}.hidden{display:none}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
+.small{font-size:12px;color:#68737d;line-height:1.8}.danger{color:#b42318}
+
+.admin{border:1px solid #d9e2ea}.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf3f7;font-size:12px}.adminStatus{margin-top:8px}.loading{opacity:.7}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}.menu button{margin:0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 5px;border-bottom:1px solid #eee;text-align:right}
+
+.hero{background:#17324d;color:#fff;border-radius:18px;padding:22px;margin:12px 0}
+.hero h2{margin-bottom:8px}.features{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feature{background:#fff;border-radius:14px;padding:14px;box-shadow:0 3px 12px #0000000d}
+.feature b{display:block;margin-bottom:5px}.cta{background:#fff;color:#17324d}
+</style>
+<meta name="novavest-version" content="v50">
+</head>
+<body>
+<header><h1>NovaVest</h1><div>نسخه دمو — بدون پول واقعی</div></header>
+<main>
+
+<section id="login" class="card">
+<h2>ورود / ثبت‌نام</h2>
+<p class="small">حساب خود را در محیط آزمایشی بسازید. هیچ پیامک یا پرداخت واقعی انجام نمی‌شود.</p>
+<input id="name" type="text" placeholder="نام شما">
+<input id="email" type="email" placeholder="ایمیل (برای اتصال به API)" autocomplete="email">
+<input id="phone" type="tel" placeholder="شماره تلفن" autocomplete="tel">
+<input id="demoPass" type="password" placeholder="رمز عبور آزمایشی">
+<label class="small"><input id="terms" type="checkbox" style="width:auto;margin-left:6px"> قوانین نسخه دمو را می‌پذیرم</label>
+<button onclick="registerUser()" class="secondary">ثبت‌نام حساب</button>
+ <button onclick="login()">ورود به حساب</button>
+<div id="loginMsg" class="small"></div>
+<div class="small" style="margin-top:8px">
+  آدرس Backend:
+  <input id="apiBase" type="url" placeholder="مثلاً http://localhost:3000"
+         style="margin-top:5px" autocomplete="url">
+  <button type="button" class="secondary" onclick="saveApiBase()">ذخیره آدرس و تست اتصال</button>
+<button type="button" class="secondary" onclick="runApiDiagnostics()">بررسی کامل API</button>
+<button type="button" class="secondary" onclick="testAuthEndpoints()">تست Session/Admin</button>
+  <span id="apiStatus"></span>
+<div id="apiDiag" class="small" style="margin-top:6px"></div>
+<div class="small" style="margin-top:10px;padding:10px;background:#f7f9fb;border-radius:10px">
+  <b>قرارداد Backend</b><br>
+  POST /api/register — name, email, phone, password<br>
+  POST /api/login — email/phone + password<br>
+  GET /api/me — Session کاربر<br>
+  GET /api/admin/users — فقط Admin
+</div>
+
+</div>
+</section>
+
+<section id="app" class="hidden">
+<div class="hero">
+<h2>به NovaVest خوش آمدید 🌟</h2>
+<p>مدیریت حساب و فعالیت‌های مالی در یک محیط آزمایشی ساده و موبایل‌پسند.</p>
+<button class="cta" onclick="document.getElementById('homeInfo').scrollIntoView()">شروع کار</button>
+</div>
+
+<div id="homeInfo" class="features">
+<div class="feature"><b>🛡️ امنیت</b><span class="small">طراحی‌شده برای آزمایش احراز هویت و امنیت حساب.</span></div>
+<div class="feature"><b>📊 شفافیت</b><span class="small">مشاهده فعالیت‌ها و تراکنش‌های دمو.</span></div>
+<div class="feature"><b>💰 کیف پول</b><span class="small">نمایش موجودی بدون انتقال پول واقعی.</span></div>
+<div class="feature"><b>📱 موبایل</b><span class="small">رابط کاربری مناسب صفحه موبایل.</span></div>
+</div>
+
+<div class="card">
+<h2>سلام <span id="showName">کاربر</span> 👋</h2>
+<div class="small">داشبورد اختصاصی حساب آزمایشی شما</div>
+<div class="balance">$20.00</div>
+<div class="small">موجودی نمایشی</div>
+</div>
+
+<div id="walletSection" class="card">
+<h2>داشبورد</h2>
+<div class="stat"><span>درآمد دمو</span><b>$0.00</b></div>
+<div class="stat"><span>فعالیت‌ها</span><b>0</b></div>
+<div class="stat"><span>وضعیت حساب</span><b>آزمایشی</b></div>
+</div>
+
+<div id="activitySection" class="card">
+<h2>فعالیت و درآمد دمو</h2>
+<div class="stat"><span>پاداش ثبت‌نام</span><b>$0.00</b></div>
+<div class="stat"><span>درآمد امروز</span><b>$0.00</b></div>
+<div class="stat"><span>کل درآمد</span><b>$0.00</b></div>
+<button onclick="addDemo()">ثبت فعالیت آزمایشی +$1</button>
+<p class="small">این دکمه فقط برای آزمایش رابط کاربری است و پول واقعی ایجاد نمی‌کند.</p>
+</div>
+
+<div id="profileSection" class="card">
+<h2>پروفایل</h2>
+<div class="stat"><span>شماره تلفن</span><b id="showPhone">-</b></div>
+<button class="secondary" onclick="withdraw()">درخواست برداشت دمو</button>
+<p class="small danger">این نسخه فقط برای آزمایش رابط کاربری است و برداشت یا پرداخت واقعی ندارد.</p>
+</div>
+
+<div class="card">
+<h2>منوی پلتفرم</h2>
+<div class="menu">
+<button type="button" onclick="safeShowSection('home')">🏠 خانه</button>
+<button type="button" onclick="safeShowSection('activity')">📊 فعالیت</button>
+<button type="button" onclick="safeShowSection('wallet')">💰 کیف پول</button>
+<button type="button" onclick="safeShowSection('profile')">👤 پروفایل</button>
+</div>
+</div>
+
+<div id="adminBox" class="card admin">
+<h2>مدیریت کاربران <span class="badge">ADMIN</span></h2>
+<div id="adminUsersStatus" class="small adminStatus">در حال آماده‌سازی...</div>
+<button class="secondary" onclick="loadAdminUsers()">🔄 دریافت کاربران</button>
+<table id="adminUsersTable">
+<thead><tr><th>کاربر</th><th>وضعیت</th><th>موجودی</th></tr></thead>
+<tbody><tr><td colspan="3">هنوز اطلاعاتی دریافت نشده است.</td></tr></tbody>
+</table>
+<p class="small">این بخش با GET /api/admin/users کار می‌کند و فقط در صورت احراز هویت ادمین اطلاعات را نمایش می‌دهد.</p>
+<div class="card" style="margin-top:12px">
+<h3>درخواست برداشت #001</h3>
+<div class="stat"><span>کاربر</span><b>کاربر آزمایشی</b></div>
+<div class="stat"><span>مبلغ</span><b>$5.00</b></div>
+<div class="stat"><span>وضعیت</span><b id="reqStatus">در انتظار بررسی</b></div>
+<button onclick="setReq('تأیید شد')">تأیید دمو</button>
+<button class="secondary" onclick="setReq('رد شد')">رد دمو</button>
+</div>
+</div>
+
+<button class="secondary" onclick="logout()">خروج از حساب</button>
+</section>
+</main>
+
+<script>
+function getApiBase(){
+  return String(localStorage.getItem('novavest_api_base') || window.NOVAVEST_API_BASE || '').trim().replace(/\/$/,'');
+}
+
+function apiUrl(path){
+  const base = getApiBase();
+  return base + path;
+}
+
+function authHeaders(extra={}){
+  const token = localStorage.getItem('novavest_access_token') ||
+                localStorage.getItem('accessToken') ||
+                localStorage.getItem('token');
+  const headers = Object.assign({'Accept':'application/json'}, extra);
+  if(token) headers.Authorization = 'Bearer ' + token;
+  if(!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = 'application/json';
+  return headers;
+}
+
+function storeAuthResponse(data){
+  const token = data && (data.token || data.accessToken ||
+    (data.session && (data.session.token || data.session.accessToken)) ||
+    (data.data && (data.data.token || data.data.accessToken)));
+  if(token) localStorage.setItem('novavest_access_token', token);
+
+  const user = data && (data.user || data.account);
+  if(user) localStorage.setItem('novavest_user', JSON.stringify(user));
+
+  return {token, user};
+}
+
+async function apiFetch(path, options={}){
+  if(!getApiBase()) throw new Error('آدرس Backend تنظیم نشده است.');
+  const opts = Object.assign({}, options);
+  opts.headers = authHeaders(opts.headers || {});
+  if(!('credentials' in opts)) opts.credentials = 'include';
+
+  // Prevent a broken/unreachable Backend from hanging the UI forever.
+  if(!('signal' in opts) && typeof AbortController !== 'undefined'){
+    const controller = new AbortController();
+    opts.signal = controller.signal;
+    setTimeout(()=>controller.abort(), 10000);
+  }
+  return fetch(apiUrl(path), opts);
+}
+
+async function loadAdminUsers(){
+ const status=document.getElementById('adminUsersStatus');
+ const tbody=document.querySelector('#adminUsersTable tbody');
+ const token=localStorage.getItem('novavest_access_token') || localStorage.getItem('accessToken') || localStorage.getItem('token');
+ const headers={'Accept':'application/json'};
+ if(token) headers.Authorization='Bearer '+token;
+ status.textContent='در حال دریافت کاربران...';
+ tbody.innerHTML='<tr><td colspan="3">در حال بارگذاری...</td></tr>';
+ try{
+   const r=await apiFetch('/api/admin/users',{method:'GET'});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok){
+     const message=data.error || data.message || (r.status===401?'احراز هویت لازم است.':r.status===403?'دسترسی ادمین ندارید.':'خطا در دریافت کاربران.');
+     throw new Error(message);
+   }
+   const users=Array.isArray(data)?data:(Array.isArray(data.users)?data.users:Array.isArray(data.data)?data.data:[]);
+   if(!users.length){
+     tbody.innerHTML='<tr><td colspan="3">کاربری پیدا نشد.</td></tr>';
+   }else{
+     tbody.innerHTML=users.map(u=>{
+       const name=escapeHtml(u.name || u.full_name || u.username || u.email || u.phone || '—');
+       const active=(u.active===false || u.is_active===false || u.status==='inactive')?'غیرفعال':'فعال';
+       const balance=Number(u.balance ?? u.wallet_balance ?? 0);
+       return '<tr><td>'+name+'</td><td>'+active+'</td><td>$'+(Number.isFinite(balance)?balance.toFixed(2):'0.00')+'</td></tr>';
+     }).join('');
+   }
+   status.textContent='تعداد کاربران دریافت‌شده: '+users.length;
+ }catch(err){
+   tbody.innerHTML='<tr><td colspan="3">اطلاعات کاربران دریافت نشد.</td></tr>';
+   status.textContent=err.message || 'خطا در اتصال به API.';
+ }
+}
+function escapeHtml(value){
+ return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function login(){
+  if(!getApiBase()){
+    const email=document.getElementById("email").value.trim();
+    const phone=document.getElementById("phone").value.trim();
+    const name=document.getElementById("name").value.trim() || "کاربر دمو";
+    const demoUser={name,email,phone,balance:20};
+    localStorage.setItem("novavest_demo_user",JSON.stringify(demoUser));
+    document.getElementById("showName").textContent=name;
+    document.getElementById("showPhone").textContent=phone || "-";
+    document.querySelector(".balance").textContent="$20.00";
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    return;
+  }
+  const emailEl = document.getElementById("email");
+  const phoneEl = document.getElementById("phone");
+  const passEl = document.getElementById("demoPass");
+
+  const email = (emailEl?.value || "").trim();
+  const phone = (phoneEl?.value || "").trim();
+  const password = passEl?.value || "";
+
+  const identifier = email || phone;
+
+  if(!identifier || !password){
+    alert("برای ورود، ایمیل یا شماره تلفن و رمز عبور را وارد کنید.");
+    return;
+  }
+
+  const body = identifier.includes("@")
+    ? { email: identifier, password }
+    : { phone: identifier, password };
+
+  if(!getApiBase()){
+    const msg = document.getElementById("loginMsg");
+    if(msg) msg.textContent = "ابتدا آدرس Backend را ذخیره کنید.";
+    return;
+  }
+  try{
+    const msg = document.getElementById("loginMsg");
+    if(msg) msg.textContent = "در حال ورود...";
+    const r = await apiFetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+    const data = await r.json().catch(()=>({}));
+    if(!r.ok){
+      const message = data.error || data.message || (r.status===401 ? "ایمیل/شماره تلفن یا رمز عبور نادرست است." : "ورود انجام نشد.");
+      if(msg) msg.textContent = message;
+      return;
+    }
+    storeAuthResponse(data);
+    if(msg) msg.textContent = "ورود موفق بود.";
+    await restoreSession();
+  }catch(e){
+    const msg = document.getElementById("loginMsg");
+    if(msg) msg.textContent = "ورود ناموفق: " + (e.name === "AbortError" ? "زمان پاسخ Backend تمام شد." : e.message);
+  }
+}
+
+
+async function registerUser(){
+ const name=document.getElementById('name').value.trim();
+ const email=document.getElementById('email').value.trim();
+ const phone=document.getElementById('phone').value.trim();
+ const password=document.getElementById('demoPass').value;
+ const terms=document.getElementById('terms').checked;
+ const msg=document.getElementById('loginMsg');
+
+ if(name.length<2){msg.textContent='لطفاً نام را وارد کنید.';return}
+ if(!/^\S+@\S+\.\S+$/.test(email)){msg.textContent='لطفاً ایمیل معتبر وارد کنید.';return}
+ if(phone.length<5){msg.textContent='لطفاً شماره تلفن معتبر وارد کنید.';return}
+ if(password.length<4){msg.textContent='رمز عبور حداقل ۴ کاراکتر باشد.';return}
+ if(!terms){msg.textContent='لطفاً قوانین نسخه دمو را بپذیرید.';return}
+
+ if(!getApiBase()){
+   const demoUser={name,email,phone,balance:20};
+   localStorage.setItem('novavest_demo_user',JSON.stringify(demoUser));
+   document.getElementById('showPhone').textContent=phone;
+   document.getElementById('showName').textContent=name;
+   document.querySelector('.balance').textContent='$20.00';
+   document.getElementById('login').classList.add('hidden');
+   document.getElementById('app').classList.remove('hidden');
+   msg.textContent='حساب دمو با موفقیت ساخته شد.';
+   return;
+ }
+ msg.textContent='در حال ساخت حساب...';
+ try{
+   const r=await apiFetch('/api/register',{
+     method:'POST',
+     headers:{'Content-Type':'application/json','Accept':'application/json'},
+     credentials:'include',
+     body:JSON.stringify({name,email,phone,password})
+   });
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok){
+     msg.textContent=data.error||data.message||'ثبت‌نام انجام نشد.';
+     return;
+   }
+   const stored=storeAuthResponse(data);
+   const user=stored.user || data.user || data.account || {};
+   document.getElementById('showPhone').textContent=user.phone||phone;
+   document.getElementById('showName').textContent=user.name||name;
+   document.querySelector('.balance').textContent='$'+Number(user.balance??0).toFixed(2);
+   document.getElementById('login').classList.add('hidden');
+   document.getElementById('app').classList.remove('hidden');
+   msg.textContent='';
+   maybeLoadAdminUsers(user);
+ }catch(err){
+   msg.textContent='اتصال به Backend برقرار نشد. سرور را اجرا کنید.';
+ }
+}
+
+function saveApiBase(){
+  const input=document.getElementById('apiBase');
+  const status=document.getElementById('apiStatus');
+  const value=input.value.trim().replace(/\/$/,'');
+  if(value && !/^https?:\/\//i.test(value)){
+    status.textContent='آدرس باید با http:// یا https:// شروع شود.';
+    return;
+  }
+  if(value) localStorage.setItem('novavest_api_base',value);
+  else localStorage.removeItem('novavest_api_base');
+  status.textContent='آدرس ذخیره شد؛ در حال تست...';
+  testBackend();
+}
+
+async function testBackend(){
+  const status=document.getElementById('apiStatus');
+  if(location.protocol === 'file:'){
+    if(status) status.textContent='فایل به‌صورت مستقیم (file://) باز شده؛ اگر CORS اجازه ندهد، Backend باید Origin مناسب را مجاز کند.';
+  }
+  if(!getApiBase()){
+    if(status) status.textContent='ابتدا آدرس کامل Backend را وارد کنید.';
+    const diag=document.getElementById('apiDiag');
+    if(diag) diag.textContent='مثال: https://example.com';
+    return;
+  }
+  const diag=document.getElementById('apiDiag');
+  status.textContent=' در حال تست...';
+  if(diag) diag.textContent='';
+  const started=Date.now();
+  try{
+    const r=await apiFetch('/api/health',{method:'GET'});
+    const raw=await r.text();
+    let data={};
+    try{data=raw?JSON.parse(raw):{};}catch(e){}
+    const elapsed=Date.now()-started;
+    if(r.ok){
+      status.textContent=' اتصال به Backend برقرار است.';
+      if(diag) diag.textContent='HTTP '+r.status+' • '+elapsed+'ms'+
+        (data.status?' • status: '+String(data.status):'');
+    }else{
+      status.textContent=' Backend پاسخ مناسب نداد ('+r.status+').';
+      if(diag) diag.textContent='HTTP '+r.status+' • '+elapsed+'ms';
+    }
+  }catch(e){
+    status.textContent=' Backend در دسترس نیست.';
+    if(diag) diag.textContent =
+      e && e.name === 'AbortError'
+        ? 'زمان پاسخ Backend بیشتر از ۱۰ ثانیه شد.'
+        : 'بررسی کنید سرور اجرا باشد و CORS/آدرس Backend درست تنظیم شده باشد.';
+  }
+}
+
+(function initApiBase(){
+  const el=document.getElementById('apiBase');
+  if(el) el.value=getApiBase();
+})();
+
+function clearApiBase(){
+  localStorage.removeItem('novavest_api_base');
+  const el=document.getElementById('apiBase');
+  if(el) el.value='';
+  const status=document.getElementById('apiStatus');
+  const diag=document.getElementById('apiDiag');
+  if(status) status.textContent='آدرس Backend پاک شد.';
+  if(diag) diag.textContent='';
+}
+
+async function testAuthEndpoints(){
+  const status=document.getElementById('apiStatus');
+  const diag=document.getElementById('apiDiag');
+  const token=localStorage.getItem('novavest_access_token');
+  if(!token){
+    if(status) status.textContent='ابتدا ثبت‌نام یا ورود را انجام دهید.';
+    return;
+  }
+  const checks=[
+    ['/api/me','Session'],
+    ['/api/admin/users','Admin Users']
+  ];
+  const results=[];
+  for(const [path,label] of checks){
+    try{
+      const r=await apiFetch(path,{method:'GET'});
+      results.push(label+': '+r.status);
+    }catch(e){
+      results.push(label+': اتصال ناموفق');
+    }
+  }
+  if(diag) diag.textContent='Token موجود است • '+results.join(' • ');
+  if(status) status.textContent='تست احراز هویت تکمیل شد.';
+}
+
+async function runApiDiagnostics(){
+  const status=document.getElementById('apiStatus');
+  const diag=document.getElementById('apiDiag');
+  if(!getApiBase()){
+    if(status) status.textContent='ابتدا آدرس Backend را وارد کنید.';
+    return;
+  }
+  if(status) status.textContent='در حال بررسی API...';
+  const checks=[
+    ['/api/health','Health'],
+    ['/api/me','Session'],
+    ['/api/admin/users','Admin Users']
+  ];
+  const results=[];
+  for(const [path,label] of checks){
+    const t=Date.now();
+    try{
+      const r=await apiFetch(path,{method:'GET'});
+      results.push(label+': '+r.status+' ('+(Date.now()-t)+'ms)');
+    }catch(e){
+      results.push(label+': اتصال ناموفق');
+    }
+  }
+  if(diag) diag.textContent=results.join(' • ');
+  if(status) status.textContent='بررسی API تکمیل شد.';
+}
+
+async function runBackendContractTest(){
+  const out=document.getElementById('apiCoreTestResult');
+  if(!getApiBase()){ if(out) out.textContent='✗ آدرس Backend تنظیم نشده است.'; return; }
+  if(out) out.textContent='در حال تست قرارداد Backend...';
+  const tests=[
+    ['/api/health','GET','Health'],
+    ['/api/me','GET','Session'],
+    ['/api/admin/users','GET','Admin Users']
+  ];
+  const lines=[];
+  for(const [path,method,label] of tests){
+    const t=performance.now();
+    try{
+      const r=await apiFetch(path,{method});
+      const ms=Math.round(performance.now()-t);
+      let note='';
+      if(r.status===401) note=' — احراز هویت لازم است';
+      else if(r.status===403) note=' — فقط Admin';
+      lines.push((r.ok?'✓':'•')+' '+label+' '+method+' '+path+' → HTTP '+r.status+' ('+ms+'ms)'+note);
+    }catch(e){
+      lines.push('✗ '+label+' '+method+' '+path+' → '+(e.name==='AbortError'?'Timeout 10s':'خطای شبکه/CORS'));
+    }
+  }
+  lines.push('نکته: این تست حساب جدید ایجاد نمی‌کند و فقط APIهای GET را بررسی می‌کند.');
+  if(out) out.textContent=lines.join('\n');
+}
+
+async function runAuthFlowCheck(){
+  const out=document.getElementById('apiCoreTestResult');
+  if(!getApiBase()){
+    if(out) out.textContent='✗ ابتدا آدرس کامل Backend را ذخیره کنید.';
+    return;
+  }
+  if(out) out.textContent='در حال بررسی چرخه Session...';
+  const lines=[];
+  try{
+    const me=await apiFetch('/api/me',{method:'GET'});
+    lines.push((me.ok?'✓':'•')+' GET /api/me → HTTP '+me.status+(me.status===401?' — برای کاربر بدون ورود قابل انتظار است.':''));
+    if(me.ok){
+      const data=await me.json().catch(()=>({}));
+      const user=data.user||data.account||data;
+      lines.push(user && (user.name||user.email||user.phone) ? '✓ پاسخ Session شامل اطلاعات کاربر است.' : '• پاسخ Session آمد، اما ساختار کاربر قابل تشخیص نیست.');
+    }
+  }catch(e){
+    lines.push('✗ GET /api/me → '+(e.name==='AbortError'?'Timeout 10s':'خطای شبکه/CORS'));
+  }
+  lines.push('ℹ برای Register/Login واقعی باید اطلاعات حساب و Backend فعال باشد؛ این تست بدون ساخت حساب جدید انجام می‌شود.');
+  if(out) out.textContent=lines.join('\n');
+}
+
+async function restoreSession(){
+ if(!getApiBase()) return;
+ try{
+   const r=await apiFetch('/api/me',{method:'GET'});
+   if(r.status===401){
+     localStorage.removeItem('novavest_access_token');
+     localStorage.removeItem('accessToken');
+     localStorage.removeItem('token');
+     localStorage.removeItem('novavest_user');
+     return;
+   }
+   if(!r.ok)return;
+   const data=await r.json().catch(()=>({}));
+   const user=data.user||data;
+   if(!user || (!user.name && !user.email && !user.phone))return;
+   document.getElementById('showPhone').textContent=user.phone||'-';
+   document.getElementById('showName').textContent=user.name||user.email||'کاربر';
+   document.querySelector('.balance').textContent='$'+Number(user.balance??20).toFixed(2);
+   document.getElementById('login').classList.add('hidden');
+   document.getElementById('app').classList.remove('hidden');
+   maybeLoadAdminUsers(user);
+ }catch(e){}
+}
+function isAdminUser(user){
+ const role=String(user?.role || user?.user_role || '').toLowerCase();
+ return user?.is_admin===true || user?.isAdmin===true || ['admin','administrator'].includes(role);
+}
+function maybeLoadAdminUsers(user){
+ const status=document.getElementById('adminUsersStatus');
+ if(isAdminUser(user)){
+   loadAdminUsers();
+ }else if(status){
+   status.textContent='بخش کاربران فقط برای حساب Admin قابل دسترسی است.';
+ }
+}
+restoreSession();
+async function logout(){
+ try{await apiFetch('/api/logout',{method:'POST'});}catch(e){}
+ localStorage.removeItem('novavest_access_token');
+ localStorage.removeItem('accessToken');
+ localStorage.removeItem('token');
+ localStorage.removeItem('novavest_user');
+ document.getElementById('app').classList.add('hidden');
+ document.getElementById('login').classList.remove('hidden');
+ document.getElementById('email').value='';
+ document.getElementById('phone').value='';
+ document.getElementById('name').value='';
+ document.getElementById('demoPass').value='';
+ document.getElementById('terms').checked=false;
+ document.getElementById('loginMsg').textContent='';
+  const apiStatus=document.getElementById('apiStatus'); if(apiStatus) apiStatus.textContent='';
+}
+function addDemo(){
+ const balanceEl=document.querySelector('.balance');
+ const current=Number((balanceEl.textContent||'$20').replace(/[^0-9.]/g,''))||20;
+ const next=current+1;
+ balanceEl.textContent='$'+next.toFixed(2);
+ alert('فعالیت آزمایشی ثبت شد. موجودی دمو: $'+next.toFixed(2));
+}
+function sendSupport(){
+ const subject=document.getElementById('supportSubject').value.trim();
+ const text=document.getElementById('supportText').value.trim();
+ const msg=document.getElementById('supportMsg');
+ if(subject.length<2 || text.length<5){msg.textContent='لطفاً موضوع و پیام را کامل وارد کنید.';return}
+ msg.textContent='پیام پشتیبانی دمو با موفقیت ثبت شد.';
+ document.getElementById('supportSubject').value='';
+ document.getElementById('supportText').value='';
+}
+function copyRef(){
+ const code=document.getElementById('refCode').textContent;
+ const msg=document.getElementById('refMsg');
+ if(navigator.clipboard){
+   navigator.clipboard.writeText(code).then(()=>msg.textContent='کد معرف کپی شد.');
+ }else{
+   msg.textContent='کد معرف شما: '+code;
+ }
+}
+function saveProfile(){
+ const name=document.getElementById('profileName').value.trim();
+ const msg=document.getElementById('profileMsg');
+ if(name.length<2){msg.textContent='نام معتبر وارد کنید.';return}
+ document.getElementById('showName').textContent=name;
+ msg.textContent='اطلاعات پروفایل در نسخه دمو ذخیره شد.';
+}
+function verifyPhone(){
+ document.getElementById('phoneVerify').textContent='تأیید شده (دمو)';
+}
+function toggle2FA(){
+ const el=document.getElementById('twoFA');
+ el.textContent=el.textContent==='خاموش'?'روشن (دمو)':'خاموش';
+}
+function newNotice(){
+ document.getElementById('notice').textContent='اعلان آزمایشی: حساب شما با موفقیت وارد نسخه دمو شد.';
+}
+function setReq(status){
+ document.getElementById('reqStatus').textContent=status;
+}
+function requestWithdraw(){
+ const amount=Number(document.getElementById('withdrawAmount').value);
+ const method=document.getElementById('withdrawMethod').value;
+ const status=document.getElementById('withdrawStatus');
+ if(!amount || amount<=0){status.textContent='لطفاً مبلغ معتبر وارد کنید.';return}
+ if(method==='روش برداشت آزمایشی'){status.textContent='لطفاً یک روش برداشت انتخاب کنید.';return}
+ status.textContent='درخواست دمو ثبت شد: $'+amount.toFixed(2)+' — وضعیت: در انتظار بررسی.';
+}
+function safeScrollTo(id){
+  const el=document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function safeShowSection(name){
+  const targets={home:'homeInfo',activity:'activitySection',wallet:'walletSection',profile:'profileSection'};
+  safeScrollTo(targets[name] || 'homeInfo');
+}
+function showSection(name){ safeShowSection(name); }
+function withdraw(){alert('درخواست برداشت در نسخه دمو ثبت نمی‌شود؛ این بخش بعداً به سیستم واقعی و امن متصل خواهد شد.')}
+</script>
+
+<script>
+async function runCoreApiTest(){
+  const out = document.getElementById("apiCoreTestResult");
+  if(!getApiBase()){
+    if(out) out.textContent = "✗ ابتدا آدرس کامل Backend را وارد و ذخیره کنید.";
+    return;
+  }
+  if(out) out.textContent = "در حال تست APIهای اصلی...";
+  const checks = [];
+  async function check(path, label, expected){
+    const started = performance.now();
+    try{
+      const r = await apiFetch(path, {method:"GET"});
+      const ms = Math.round(performance.now()-started);
+      if(r.ok){
+        checks.push("✓ " + label + " — HTTP " + r.status + " (" + ms + "ms)");
+      }else if(expected && expected.includes(r.status)){
+        checks.push("• " + label + " — HTTP " + r.status + " (پاسخ قابل انتظار)");
+      }else{
+        checks.push("✗ " + label + " — HTTP " + r.status);
+      }
+    }catch(e){
+      const reason = e.name === "AbortError" ? "Timeout 10s" : (e.message || "خطای شبکه/CORS");
+      checks.push("✗ " + label + " — " + reason);
+    }
+  }
+  await check("/api/health", "GET /api/health", [200,204]);
+  await check("/api/me", "GET /api/me", [200,401]);
+  await check("/api/admin/users", "GET /api/admin/users", [200,401,403]);
+  if(out) out.textContent = checks.join("\n");
+}
+</script>
+
+</body>
+</html>
