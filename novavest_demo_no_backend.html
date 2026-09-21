@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NovaVest Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#17324d;color:#fff;padding:18px;text-align:center}main{max-width:520px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 4px 16px #00000012}
+h1,h2,h3{margin-top:0}.balance{font-size:30px;font-weight:bold;margin:8px 0}
+input,button{width:100%;padding:13px;border-radius:10px;font-size:16px;margin:7px 0}
+input{border:1px solid #ccd3da}button{border:0;background:#17324d;color:#fff;font-weight:bold;cursor:pointer}
+button.secondary{background:#e9eef2;color:#17324d}.hidden{display:none}
+.small{font-size:12px;color:#68737d;line-height:1.8}.hero{background:#17324d;color:#fff;border-radius:18px;padding:22px;margin:12px 0}
+.hero h2{margin-bottom:8px}.features{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feature{background:#fff;border-radius:14px;padding:14px;box-shadow:0 3px 12px #0000000d}
+.feature b{display:block;margin-bottom:5px}.cta{background:#fff;color:#17324d}
+.stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}.menu button{margin:0}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf3f7;font-size:12px}
+.success{color:#137333}.danger{color:#b42318}.notice{padding:10px;background:#f7f9fb;border-radius:10px;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>NovaVest</h1><div>نسخه دمو — بدون Backend و بدون پول واقعی</div></header>
+<main>
+<section id="login" class="card">
+<h2>ورود / ثبت‌نام</h2>
+<p class="small">این نسخه کاملاً آزمایشی است و برای ثبت‌نام و ورود هیچ Backend یا سرور جداگانه‌ای لازم ندارد.</p>
+<input id="name" type="text" placeholder="نام شما" autocomplete="name">
+<input id="email" type="email" placeholder="ایمیل" autocomplete="email">
+<input id="phone" type="tel" placeholder="شماره تلفن" autocomplete="tel">
+<input id="demoPass" type="password" placeholder="رمز عبور آزمایشی">
+<label class="small"><input id="terms" type="checkbox" style="width:auto;margin-left:6px"> قوانین نسخه دمو را می‌پذیرم</label>
+<button onclick="registerUser()" class="secondary">ثبت‌نام حساب</button>
+<button onclick="login()">ورود به حساب</button>
+<div id="loginMsg" class="small"></div>
+</section>
+
+<section id="app" class="hidden">
+<div class="hero"><h2>به NovaVest خوش آمدید 🌟</h2><p>مدیریت حساب و فعالیت‌های مالی در محیط آزمایشی موبایل‌پسند.</p><button class="cta" onclick="document.getElementById('dashboard').scrollIntoView()">شروع کار</button></div>
+<div class="features">
+<div class="feature"><b>🛡️ امنیت</b><span class="small">محیط آزمایشی بدون انتقال پول واقعی.</span></div>
+<div class="feature"><b>📊 شفافیت</b><span class="small">مشاهده فعالیت‌ها و آمار دمو.</span></div>
+<div class="feature"><b>💰 کیف پول</b><span class="small">موجودی نمایشی برای تست.</span></div>
+<div class="feature"><b>📱 موبایل</b><span class="small">طراحی مناسب تلفن همراه.</span></div>
+</div>
+
+<div id="dashboard" class="card"><h2>سلام <span id="showName">کاربر</span> 👋</h2><div class="small">داشبورد حساب آزمایشی</div><div class="balance" id="balance">$20.00</div><div class="small">موجودی نمایشی</div></div>
+
+<div class="card"><h2>آمار</h2><div class="stat"><span>درآمد دمو</span><b id="income">$0.00</b></div><div class="stat"><span>فعالیت‌ها</span><b id="activityCount">0</b></div><div class="stat"><span>وضعیت حساب</span><b>آزمایشی</b></div></div>
+
+<div class="card"><h2>فعالیت و درآمد دمو</h2><div class="stat"><span>درآمد امروز</span><b id="todayIncome">$0.00</b></div><div class="stat"><span>کل درآمد</span><b id="totalIncome">$0.00</b></div><button onclick="addDemo()">ثبت فعالیت آزمایشی +$1</button><p class="small">فقط برای تست است و پول واقعی ایجاد نمی‌کند.</p></div>
+
+<div class="card"><h2>پروفایل</h2><div class="stat"><span>ایمیل</span><b id="showEmail">-</b></div><div class="stat"><span>شماره تلفن</span><b id="showPhone">-</b></div><button class="secondary" onclick="editName()">ویرایش نام</button><button class="secondary" onclick="withdraw()">درخواست برداشت دمو</button><p class="small danger">برداشت و پرداخت واقعی در این نسخه وجود ندارد.</p></div>
+
+<div class="card"><h2>منوی پلتفرم</h2><div class="menu"><button onclick="go('dashboard')">🏠 خانه</button><button onclick="go('activity')">📊 فعالیت</button><button onclick="go('wallet')">💰 کیف پول</button><button onclick="go('profile')">👤 پروفایل</button></div></div>
+
+<div class="card"><h2>مدیریت کاربران <span class="badge">ADMIN DEMO</span></h2><p class="small">بخش مدیریتی نمونه است و به Backend متصل نیست.</p><div id="adminStatus" class="notice">کاربر فعلی: —</div><button class="secondary" onclick="showAdmin()">نمایش اطلاعات دمو</button><div id="adminInfo" class="notice hidden"></div></div>
+
+<div id="notice" class="notice hidden"></div>
+<button class="secondary" onclick="logout()">خروج از حساب</button>
+</section>
+</main>
+<script>
+const KEY='novavest_demo_account';
+function account(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
+function msg(t,ok=false){const e=document.getElementById('loginMsg');e.textContent=t;e.className='small '+(ok?'success':'danger')}
+function registerUser(){const name=document.getElementById('name').value.trim(),email=document.getElementById('email').value.trim(),phone=document.getElementById('phone').value.trim(),password=document.getElementById('demoPass').value,terms=document.getElementById('terms').checked;if(name.length<2)return msg('لطفاً نام را وارد کنید.');if(!/^\S+@\S+\.\S+$/.test(email))return msg('لطفاً ایمیل معتبر وارد کنید.');if(phone.length<5)return msg('لطفاً شماره تلفن معتبر وارد کنید.');if(password.length<4)return msg('رمز عبور حداقل ۴ کاراکتر باشد.');if(!terms)return msg('لطفاً قوانین نسخه دمو را بپذیرید.');const a={name,email,phone,password,balance:20,income:0,activities:0,createdAt:new Date().toISOString()};localStorage.setItem(KEY,JSON.stringify(a));localStorage.setItem('novavest_demo_logged_in','1');enter(a);msg('حساب دمو با موفقیت ساخته شد.',true)}
+function login(){const email=document.getElementById('email').value.trim(),phone=document.getElementById('phone').value.trim(),password=document.getElementById('demoPass').value,a=account();if(!a)return msg('ابتدا یک حساب دمو ثبت‌نام کنید.');if(password!==a.password||(!email&&!phone)||(email&&email!==a.email)||(phone&&phone!==a.phone))return msg('ایمیل/شماره یا رمز عبور نادرست است.');localStorage.setItem('novavest_demo_logged_in','1');enter(a)}
+function enter(a){document.getElementById('showName').textContent=a.name;document.getElementById('showEmail').textContent=a.email;document.getElementById('showPhone').textContent=a.phone;document.getElementById('balance').textContent='$'+Number(a.balance||20).toFixed(2);document.getElementById('income').textContent='$'+Number(a.income||0).toFixed(2);document.getElementById('todayIncome').textContent='$'+Number(a.income||0).toFixed(2);document.getElementById('totalIncome').textContent='$'+Number(a.income||0).toFixed(2);document.getElementById('activityCount').textContent=a.activities||0;document.getElementById('adminStatus').textContent='کاربر فعلی: '+a.name;document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden')}
+function addDemo(){const a=account();if(!a)return;a.income=Number(a.income||0)+1;a.activities=Number(a.activities||0)+1;a.balance=Number(a.balance||20)+1;localStorage.setItem(KEY,JSON.stringify(a));enter(a);showNotice('فعالیت آزمایشی ثبت شد: +$1. موجودی واقعی تغییر نکرد.')}
+function editName(){const a=account();if(!a)return;const n=prompt('نام جدید را وارد کنید:',a.name);if(n&&n.trim().length>=2){a.name=n.trim();localStorage.setItem(KEY,JSON.stringify(a));enter(a);showNotice('نام در نسخه دمو ذخیره شد.')}}
+function withdraw(){showNotice('درخواست برداشت دمو ثبت شد. هیچ پول واقعی منتقل نمی‌شود.')}
+function showAdmin(){const a=account(),e=document.getElementById('adminInfo');e.classList.remove('hidden');e.textContent=a?'نام: '+a.name+' | ایمیل: '+a.email+' | تلفن: '+a.phone+' | موجودی دمو: $'+Number(a.balance||20).toFixed(2):'هنوز کاربری ثبت نشده است.'}
+function showNotice(t){const e=document.getElementById('notice');e.textContent=t;e.classList.remove('hidden')}
+function go(n){document.getElementById('dashboard').scrollIntoView({behavior:'smooth'});showNotice('بخش '+({dashboard:'خانه',activity:'فعالیت',wallet:'کیف پول',profile:'پروفایل'}[n]||n)+' باز شد.')}
+function logout(){localStorage.removeItem('novavest_demo_logged_in');document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden');document.getElementById('loginMsg').textContent='';document.getElementById('email').value='';document.getElementById('phone').value='';document.getElementById('demoPass').value=''}
+(function(){const a=account();if(a&&localStorage.getItem('novavest_demo_logged_in')==='1')enter(a)})();
+</script>
+</body>
+</html>
